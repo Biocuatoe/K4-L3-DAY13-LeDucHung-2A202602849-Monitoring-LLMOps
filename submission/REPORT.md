@@ -16,9 +16,9 @@
 
 | Evidence | Đường dẫn | Trạng thái |
 |---|---|---|
-| Pytest cuối | [evidence/01-pytest.txt](evidence/01-pytest.txt) | có |
-| Log validator | [evidence/02-log-validator.txt](evidence/02-log-validator.txt) | có |
-| Dashboard validator | [evidence/03-dashboard-validator.txt](evidence/03-dashboard-validator.txt) | có |
+| Pytest cuối | [evidence/01-pytest.png](evidence/01-pytest.png) | có |
+| Log validator | [evidence/02-log-validator.png](evidence/02-log-validator.png) | có |
+| Dashboard validator | [evidence/03-dashboard-validator.png](evidence/03-dashboard-validator.png) | có |
 | Structured log | ![](evidence/04-structured-log.png) | có |
 | PII redaction | ![](evidence/05-pii-redaction.png) | có |
 | Trace list | ![](evidence/06-trace-list.png) | có |
@@ -35,9 +35,9 @@
 
 | Nội dung | Baseline (CP0) | Kết quả cuối | Nhận xét |
 |---|---|---|---|
-| `validate_logs.py` | 30/100 | **100/100** (69 record, 33 correlation ID khác nhau, 0 PII leak) | [evidence/02](evidence/02-log-validator.txt). `data/logs.jsonl` cũ được chuyển sang `data/old/` (không commit) trước khi đo lại. |
-| `validate_dashboard.py` | 6/6 | **6/6** | [evidence/03](evidence/03-dashboard-validator.txt) |
-| `pytest` | 22 passed | **33 passed** | [evidence/01](evidence/01-pytest.txt) |
+| `validate_logs.py` | 30/100 | **100/100** (69 record, 33 correlation ID khác nhau, 0 PII leak) | [evidence/02](evidence/02-log-validator.png). `data/logs.jsonl` cũ được chuyển sang `data/old/` (không commit) trước khi đo lại. |
+| `validate_dashboard.py` | 6/6 | **6/6** | [evidence/03](evidence/03-dashboard-validator.png) |
+| `pytest` | 22 passed | **33 passed** | [evidence/01](evidence/01-pytest.png) |
 | Traces trong workload cuối | 0 (không có key) | **31** trace trong project `day13-k4-l3b-2A202602849` (16 workload/prompt + 5 challenge + 10 kiểm chứng sau fix), mỗi trace `day13-agent-request` → `lab-agent-run` → `retrieval` + `generation` | [evidence/06](evidence/06-trace-list.png) (Total 31). |
 | PII leak | 0 | **0** | request PII giả `req-a11ce002`, [evidence/05](evidence/05-pii-redaction.png) |
 | Latency | P95 161 ms (10 req) | bình thường ≈ 150–190 ms/request; P95 cửa sổ 60' = 2665 ms gồm cả incident; **incident: P95 ≈ 2665 ms**. Một số request đầu tiên sau mỗi lần khởi động API chậm 2.3–3.0 s (`req-ab000201`, `req-ab000202`, `req-ab000204`): trace cho thấy retrieval ≈ 0 ms, generation ≈ 150 ms, tức thời gian nằm ở bước lấy prompt từ Langfuse lúc cache còn lạnh (chưa có span riêng), không phải incident | [evidence/11](evidence/11-dashboard-overview.png), [evidence/12](evidence/12-incident-metric.png) |

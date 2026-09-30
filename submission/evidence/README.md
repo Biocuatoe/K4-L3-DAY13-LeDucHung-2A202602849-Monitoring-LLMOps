@@ -4,10 +4,10 @@ Tất cả nguồn là output/ảnh sinh từ lần chạy thật trên code ở
 
 | # | File | Nguồn | Chứng minh | CP |
 |---|---|---|---|---|
-| 01 | `01-pytest.txt` | output `python -m pytest -q` | 33 test pass | CP0–CP4 |
-| 02 | `02-log-validator.txt` | output `scripts/validate_logs.py` | 100/100, 0 PII leak | CP1 |
-| 03 | `03-dashboard-validator.txt` | output `scripts/validate_dashboard.py` | 6/6 panel | CP2 |
-| 04 | `04-structured-log.png` | terminal / `data/logs.jsonl` (`req-ab000201`) | JSON log có ts, event, correlation_id, model, env, feature, latency | CP1 |
+| 01 | `01-pytest.png` | output `python -m pytest -q` | 33 test pass | CP0–CP4 |
+| 02 | `02-log-validator.png` | output `scripts/validate_logs.py` | 100/100, 0 PII leak | CP1 |
+| 03 | `03-dashboard-validator.png` | output `scripts/validate_dashboard.py` | 6/6 panel | CP2 |
+| 04 | `04-structured-log.png` | terminal / `data/logs.jsonl` (`req-aba482c1`) | JSON log có ts, event, correlation_id, model, env, feature, latency | CP1 |
 | 05 | `05-pii-redaction.png` | terminal / `data/logs.jsonl` (`req-a11ce002`) | input giả → `[REDACTED_*]`, 0 chuỗi PII gốc trong log | CP1 |
 | 06 | `06-trace-list.png` | Langfuse UI | project cá nhân, 31 trace gốc `day13-agent-request` | CP2 |
 | 07 | `07-trace-waterfall.png` | Langfuse UI, trace `ef87b6b9…` | `lab-agent-run` → `retrieval` + `generation` (timeline) | CP2 |
