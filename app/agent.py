@@ -9,7 +9,7 @@ from .mock_llm import FakeLLM
 from .mock_rag import retrieve
 from .pii import hash_user_id, summarize_text
 from .prompt_management import resolve_prompt
-from .tracing import get_langfuse_client, observe, propagate_attributes, tracing_enabled
+from .tracing import get_langfuse_client, observe, propagate_attributes, start_as_current_observation, tracing_enabled
 
 
 @dataclass
@@ -28,7 +28,7 @@ class LabAgent:
         self.model = model
         self.llm = FakeLLM(model=model)
 
-    @observe(name="lab-agent-run", as_type="agent", capture_input=False, capture_output=False)
+    @observe(name="lab-agent-run", as_type="agent")
     def run(
         self,
         user_id: str,
@@ -51,7 +51,23 @@ class LabAgent:
             },
         ):
             started = time.perf_counter()
-            docs = retrieve(message)
+
+            # Child observation: retrieval
+            with start_as_current_observation(
+                name="retrieval",
+                as_type="retriever",
+            ) as r_obs:
+                docs = retrieve(message)
+                r_obs.update(
+                    metadata={
+                        "doc_count": len(docs),
+                        "query_preview": summarize_text(message),
+                        "feature": feature,
+                        "model": self.model,
+                    }
+                )
+
+            # Resolve prompt (may be local or from Langfuse)
             prompt = resolve_prompt(
                 langfuse_client,
                 feature=feature,
@@ -59,6 +75,8 @@ class LabAgent:
                 message=message,
                 enabled=tracing_enabled(),
             )
+
+            # Update the agent span with prompt metadata
             langfuse_client.update_current_span(
                 metadata={
                     "doc_count": len(docs),
@@ -68,13 +86,38 @@ class LabAgent:
                     "prompt_version": prompt.version,
                     "prompt_source": prompt.source,
                     "prompt_fetch_error": prompt.fetch_error or "",
+                    "feature": feature,
+                    "model": self.model,
                 },
                 version=prompt.version,
             )
-            # TODO (CP2): instrument retrieve() and FakeLLM.generate() as child
-            # observations. The nested generation must receive prompt, usage and cost.
-            with propagate_attributes(prompt=prompt.managed_prompt):
-                response = self.llm.generate(prompt.text)
+
+            # Child observation: generation
+            with start_as_current_observation(
+                name="generation",
+                as_type="generation",
+                model=self.model,
+            ) as g_obs:
+                with propagate_attributes(prompt=prompt.managed_prompt):
+                    response = self.llm.generate(prompt.text)
+                g_obs.update(
+                    metadata={
+                        "model": self.model,
+                        "prompt_name": prompt.name,
+                        "prompt_label": prompt.label,
+                        "prompt_version": prompt.version,
+                        "prompt_source": prompt.source,
+                        "input_tokens": response.usage.input_tokens,
+                        "output_tokens": response.usage.output_tokens,
+                        "cost_usd": self._estimate_cost(
+                            response.usage.input_tokens, response.usage.output_tokens
+                        ),
+                        "ttft_ms": response.ttft_ms,
+                        "latency_ms": int((time.perf_counter() - started) * 1000),
+                        "output_preview": summarize_text(response.text),
+                    }
+                )
+
             quality_score = self._heuristic_quality(message, response.text, docs)
             latency_ms = int((time.perf_counter() - started) * 1000)
             cost_usd = self._estimate_cost(response.usage.input_tokens, response.usage.output_tokens)

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 import structlog
 from structlog.contextvars import merge_contextvars
@@ -11,6 +11,19 @@ from structlog.contextvars import merge_contextvars
 from .pii import scrub_text
 
 LOG_PATH = Path(os.getenv("LOG_PATH", "data/logs.jsonl"))
+
+
+def _scrub_value(val: Any) -> Any:
+    """Recursively scrub a value: strings are scrubbed, dicts recursed, lists recursed."""
+    if isinstance(val, str):
+        return scrub_text(val)
+    if isinstance(val, bytes):
+        return scrub_text(val)
+    if isinstance(val, dict):
+        return {k: _scrub_value(v) for k, v in val.items()}
+    if isinstance(val, (list, tuple)):
+        return type(val)(_scrub_value(item) for item in val)
+    return val
 
 
 class JsonlFileProcessor:
@@ -22,17 +35,11 @@ class JsonlFileProcessor:
         return event_dict
 
 
-
 def scrub_event(_: Any, __: str, event_dict: dict[str, Any]) -> dict[str, Any]:
-    payload = event_dict.get("payload")
-    if isinstance(payload, dict):
-        event_dict["payload"] = {
-            k: scrub_text(v) if isinstance(v, str) else v for k, v in payload.items()
-        }
-    if "event" in event_dict and isinstance(event_dict["event"], str):
-        event_dict["event"] = scrub_text(event_dict["event"])
+    """Scrub PII from the entire event dict recursively, before file write."""
+    for key in list(event_dict.keys()):
+        event_dict[key] = _scrub_value(event_dict[key])
     return event_dict
-
 
 
 def configure_logging() -> None:
@@ -42,8 +49,7 @@ def configure_logging() -> None:
             merge_contextvars,
             structlog.processors.add_log_level,
             structlog.processors.TimeStamper(fmt="iso", utc=True, key="ts"),
-            # TODO: Register your PII scrubbing processor here
-            # scrub_event,
+            scrub_event,  # PII scrubber runs BEFORE JsonlFileProcessor
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             JsonlFileProcessor(),
@@ -52,7 +58,6 @@ def configure_logging() -> None:
         wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
         cache_logger_on_first_use=True,
     )
-
 
 
 def get_logger() -> structlog.typing.FilteringBoundLogger:

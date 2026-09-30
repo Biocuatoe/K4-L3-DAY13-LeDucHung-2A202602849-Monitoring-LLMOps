@@ -7,9 +7,16 @@ primary_slo:
     total_event: 'event == "request_received"'
   target_percent: 99.5
   error_budget_percent: 0.5
-  note: Học viên phải giải thích hoặc điều chỉnh ngưỡng bằng baseline của mình. Ví dụ nếu có 10,000 request trong cửa sổ 28 ngày, error budget 0.5% nghĩa là tối đa 50 request được phép không đạt SLO.
+  note: |
+    Baseline thực tế (10 request): latency_p95=152ms, latency_p99=152ms, ttft_p95=51ms, error_rate=0%, retrieval_success=100%, quality_avg=0.880.
+    Ngưỡng 3000ms được chọn với margin ~20x so với baseline để tránh false alarm trong môi trường demo.
+    Nếu có 10,000 request trong 28 ngày, error budget 0.5% nghĩa là tối đa 50 request được phép không đạt SLO.
 guardrails:
   error_rate_pct_max: 2
   daily_cost_usd_max: 2.5
   quality_score_avg_min: 0.75
   retrieval_success_rate_pct_min: 90
+  note: |
+    Baseline thực tế: error_rate=0%, total_cost=$0.0213 cho 10 request (~0.002 USD/request).
+    quality_avg=0.880 > 0.75 threshold → guardrail 0.75 an toàn với margin 0.13.
+    retrieval_success=100% > 90% threshold → guardrail 90% cho phép một số retrieval fail trong production.
