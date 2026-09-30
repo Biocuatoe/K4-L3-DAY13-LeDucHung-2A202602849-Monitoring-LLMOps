@@ -9,3 +9,11 @@ data/audit.jsonl
 config/challenge.json
 .pytest_cache/
 .antigravity/
+
+# generated runtime artefacts
+data/challenge_*.json
+data/uvicorn-*.log
+data/uvicorn-*.err
+data/logs.cp0-baseline.jsonl*
+data/old/
+data/dashboard.html

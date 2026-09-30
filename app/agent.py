@@ -28,7 +28,7 @@ class LabAgent:
         self.model = model
         self.llm = FakeLLM(model=model)
 
-    @observe(name="lab-agent-run", as_type="agent")
+    @observe(name="lab-agent-run", as_type="agent", capture_input=False, capture_output=False)
     def run(
         self,
         user_id: str,
@@ -98,9 +98,21 @@ class LabAgent:
                 as_type="generation",
                 model=self.model,
             ) as g_obs:
-                with propagate_attributes(prompt=prompt.managed_prompt):
-                    response = self.llm.generate(prompt.text)
+                response = self.llm.generate(prompt.text)
+                update_kwargs = {}
+                if prompt.managed_prompt is not None:
+                    update_kwargs["prompt"] = prompt.managed_prompt
                 g_obs.update(
+                    usage_details={
+                        "input": response.usage.input_tokens,
+                        "output": response.usage.output_tokens,
+                    },
+                    cost_details={
+                        "total": self._estimate_cost(
+                            response.usage.input_tokens, response.usage.output_tokens
+                        )
+                    },
+                    **update_kwargs,
                     metadata={
                         "model": self.model,
                         "prompt_name": prompt.name,

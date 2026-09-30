@@ -29,11 +29,11 @@ Ví dụ dưới đây minh họa mức độ cụ thể cần có. Học viên 
 - **Duration:** `5m`
 - **Kênh thông báo:** Slack `#k4-l3b-alerts`
 - **SLI/SLO liên quan:** latency P95 của `response_sent.latency_ms` (SLO: `fast_successful_requests`)
-- **Điều kiện và thời gian duy trì:** `p95(latency_ms) > 3000ms` trong 5 phút
-- **Ảnh hưởng tới người dùng:** người dùng phải chờ hơn 3 giây để nhận câu trả lời thay vì trung bình < 200ms
+- **Điều kiện và thời gian duy trì:** `p95(latency_ms) > 2000ms` trong 5 phút (ngưỡng cảnh báo sớm, chặt hơn SLO 3000ms; rút ra từ challenge `rag_slow`: P95 = 2655ms vượt 2000ms nhưng chưa vượt SLO 3000ms)
+- **Ảnh hưởng tới người dùng:** người dùng phải chờ hơn 2 giây để nhận câu trả lời thay vì trung bình < 200ms
 - **Ba bước kiểm tra đầu tiên:**
-  1. **Metrics →** Mở dashboard latency, xác nhận P95/P99 vượt ngưỡng 3000ms và thời gian duy trì ≥ 5 phút.
-  2. **Logs →** Lọc `data/logs.jsonl` trong khoảng đó: `jq '. | select(.event == "response_sent" and .latency_ms > 3000)' data/logs.jsonl`. Lấy một `correlation_id` có `latency_ms` cao.
+  1. **Metrics →** Mở dashboard latency, xác nhận P95/P99 vượt ngưỡng 2000ms và thời gian duy trì ≥ 5 phút.
+  2. **Logs →** Lọc `data/logs.jsonl` trong khoảng đó: `jq '. | select(.event == "response_sent" and .latency_ms > 2000)' data/logs.jsonl`. Lấy một `correlation_id` có `latency_ms` cao.
   3. **Traces →** Mở trace cùng `correlation_id` trên Langfuse, kiểm tra span `retrieval` và `generation` để xác định bước nào bất thường (retrieval chậm → RAG issue; generation chậm → LLM issue).
 - **Mitigation tạm thời:**
   - Nếu generation span chậm: rollback prompt version về baseline, kiểm tra `LANGFUSE_PROMPT_LABEL`.

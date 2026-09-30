@@ -1,10 +1,10 @@
 alerts:
   - name: HighLatencyP95
     severity: warning
-    condition: 'p95(latency_ms) > 3000'
+    condition: 'p95(latency_ms) > 2000'
     duration: 5m
     type: symptom-based
-    channel: slack
+    channel: '#k4-l3b-alerts'
     owner: student-2A202602849
     runbook: docs/alerts.md#highlatencyp95
 
@@ -13,7 +13,7 @@ alerts:
     condition: 'error_rate_pct > 2'
     duration: 10m
     type: symptom-based
-    channel: slack
+    channel: '#k4-l3b-alerts'
     owner: student-2A202602849
     runbook: docs/alerts.md#elevatederrorrate
 
@@ -22,6 +22,6 @@ alerts:
     condition: 'retrieval_success_rate_pct < 90'
     duration: 15m
     type: symptom-based
-    channel: slack
+    channel: '#k4-l3b-alerts'
     owner: student-2A202602849
     runbook: docs/alerts.md#degradedretrievalsuccess

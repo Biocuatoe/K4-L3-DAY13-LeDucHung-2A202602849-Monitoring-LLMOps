@@ -1,4 +1,0 @@
-{"service": "day13-l3b-monitoring-llmops-lab", "env": "dev", "payload": {"tracing_enabled": true}, "event": "app_started", "level": "info", "ts": "2026-09-30T04:31:37.409995Z"}
-INFO:     127.0.0.1:62560 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62632 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62651 - "GET /metrics HTTP/1.1" 200 OK

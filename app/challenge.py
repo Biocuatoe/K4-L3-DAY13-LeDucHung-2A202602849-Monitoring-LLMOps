@@ -30,7 +30,7 @@ def _require_text(payload: dict[str, Any], field: str) -> str:
     return value.strip()
 
 
-def load_challenge(path: str | Path = "config/K4-L3B-challenge.json") -> ChallengeConfig:
+def load_challenge(path: str | Path = "config/challenge.json") -> ChallengeConfig:
     challenge_path = Path(path)
     if not challenge_path.exists():
         raise FileNotFoundError(
